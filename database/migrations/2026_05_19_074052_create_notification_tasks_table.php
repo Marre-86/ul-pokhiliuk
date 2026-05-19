@@ -9,12 +9,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('notification_tasks', function (Blueprint $table) {
-            $table->id('id')->primary();
+            $table->id('id');
             $table->string('channel', 10); // 'sms' или 'email'
             $table->text('message');
             $table->tinyInteger('status')->default(0); // 0 = pending, 1 = processing, 2 - completed, 3 = failed
             $table->integer('priority')->default(5); // 1-высший, 10-низший
-            $table->timestamp('created_at');
+            $table->timestamps();
             $table->timestamp('completed_at')->nullable();
         });
     }

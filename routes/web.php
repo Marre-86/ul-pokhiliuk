@@ -7,6 +7,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/api-docs', function () {
+    return view('swagger-ui');
+});
+
+
 Route::get('/test-redis-cache', function () {
     $key = 'test_redis_';
     $value = 'Redis test value at ' . now()->toDateTimeString();

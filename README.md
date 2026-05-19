@@ -56,6 +56,7 @@
    - установит зависимости PHP (`composer install`);
    - сгенерирует ключ приложения (`php artisan key:generate`);
    - выполнит миграции и наполнит БД тестовыми данными (`php artisan migrate --seed`).
+   - сформирует Swagger-документацию (OpenAPI) (`php artisan migrate --seed`).
 
 3. **Повторный запуск проекта**:
    ```bash
@@ -67,6 +68,9 @@
    ```
 
 3. **Приложение будет доступно** по адресу: http://localhost
+
+  **Swagger-документация доступна** по адресу: http://localhost/api-docs
+
 
 ### Описание сервисов
 
@@ -98,3 +102,4 @@ Docker Compose включает следующие сервисы:
 - **Проверка PHPStan**: `make phpstan`
 - **Проверка code style**: `make lint`
 - **Линтер, PHPStan, тесты одной командой**: `make check`
+- **Обновить swagger-документацию**: `make update-swagger`

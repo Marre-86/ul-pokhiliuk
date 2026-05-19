@@ -46,6 +46,7 @@ class Notification extends Model
             'attempts' => 'integer',
             'last_attempt' => 'datetime',
             'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

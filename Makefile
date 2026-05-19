@@ -5,6 +5,8 @@ docker-setup:
 	docker compose exec app composer install
 	docker compose exec app php artisan key:generate
 	docker compose exec app php artisan migrate --seed
+	docker compose exec app php artisan app:generate-open-api
+
 	@echo "✅ Проект успешно развёрнут!"
 
 docker-start:
@@ -24,6 +26,9 @@ install:
 
 validate:
 	composer validate
+
+update-swagger:
+	php artisan app:generate-open-api
 
 lint:
 	composer exec --verbose phpcs -- --standard=PSR12 app routes

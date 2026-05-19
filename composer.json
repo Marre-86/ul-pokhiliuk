@@ -9,9 +9,12 @@
         "php": "^8.3",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
-        "vladimir-yuldashev/laravel-queue-rabbitmq": "dev-master"
+        "swagger-api/swagger-ui": "^5.0",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "dev-master",
+        "zircote/swagger-php": "^6.0"
     },
     "require-dev": {
+        "doctrine/annotations": "^2.0",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.0",
         "laravel/pail": "^1.2.5",

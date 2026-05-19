@@ -1,0 +1,174 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Company - Service",
+        "description": "Service documentation",
+        "contact": {
+            "email": "admin@admin.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/notifications/send-bulk": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Send notifications to multiple recipients",
+                "description": "Creates a notification task for sending messages via specified channel to a list of recipients.",
+                "operationId": "sendBulkNotifications",
+                "parameters": [
+                    {
+                        "name": "X-Request-ID",
+                        "in": "header",
+                        "description": "Unique request identifier for tracing",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "req-123e4567-e89b-12d3-a456-426614174000"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Notification data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "channel",
+                                    "message",
+                                    "recipients",
+                                    "priority"
+                                ],
+                                "properties": {
+                                    "channel": {
+                                        "description": "Notification channel",
+                                        "type": "string",
+                                        "example": "sms",
+                                        "enum": [
+                                            "email",
+                                            "sms"
+                                        ]
+                                    },
+                                    "message": {
+                                        "description": "Message text to send",
+                                        "type": "string",
+                                        "example": "Ваш код подтверждения: 123456",
+                                        "maxLength": 1000
+                                    },
+                                    "recipients": {
+                                        "description": "List of user IDs to receive the notification",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "1",
+                                            "maxLength": 255
+                                        },
+                                        "example": [
+                                            "1",
+                                            "13",
+                                            "124"
+                                        ],
+                                        "minItems": 1
+                                    },
+                                    "priority": {
+                                        "description": "Priority level (0=highest, 10=lowest)",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "maximum": 10,
+                                        "minimum": 0
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Notification task created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification task created successfully"
+                                        },
+                                        "task_id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "request_id": {
+                                            "type": "string",
+                                            "example": "req-123e4567-e89b-12d3-a456-426614174000"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Missing required header",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Missing required header: X-Request-ID"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "channel": [
+                                                    "The channel field is required."
+                                                ],
+                                                "recipients": [
+                                                    "The recipients field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Notifications",
+            "description": "Notifications"
+        }
+    ]
+}

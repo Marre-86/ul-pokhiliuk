@@ -45,6 +45,7 @@ class NotificationTask extends Model
             'status' => NotificationTaskStatus::class,
             'priority' => 'integer',
             'created_at' => 'datetime',
+            'updated_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
