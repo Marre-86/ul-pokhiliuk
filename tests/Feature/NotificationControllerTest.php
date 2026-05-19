@@ -12,6 +12,8 @@ class NotificationControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const VALID_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
     /** @test */
     public function test_requires_x_request_id_header()
     {
@@ -24,7 +26,61 @@ class NotificationControllerTest extends TestCase
 
         $response->assertStatus(400);
         $response->assertJson([
-            'error' => 'Missing required header: X-Request-ID'
+            'error' => 'X-Request-ID header is required for idempotency'
+        ]);
+    }
+
+    /** @test */
+    public function test_validates_x_request_id_cannot_be_empty_or_whitespace()
+    {
+        $response = $this->withHeaders([
+            'X-Request-ID' => '   ',
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test message',
+            'recipients' => ['1'],
+            'priority' => 1,
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'error' => 'X-Request-ID cannot be empty or contain only whitespace'
+        ]);
+    }
+
+    /** @test */
+    public function test_validates_x_request_id_length()
+    {
+        $response = $this->withHeaders([
+            'X-Request-ID' => 'too-short',
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test message',
+            'recipients' => ['1'],
+            'priority' => 1,
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'error' => 'X-Request-ID must be exactly 36 characters long (UUID v4 format)'
+        ]);
+    }
+
+    /** @test */
+    public function test_validates_x_request_id_uuid_format()
+    {
+        $response = $this->withHeaders([
+            'X-Request-ID' => '12345678-1234-1234-1234-123456789abc', // valid length but not v4
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test message',
+            'recipients' => ['1'],
+            'priority' => 1,
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'error' => 'X-Request-ID must be a valid UUID v4 format'
         ]);
     }
 
@@ -32,7 +88,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_channel_is_required()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'message' => 'Test message',
             'recipients' => ['1'],
@@ -47,7 +103,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_channel_must_be_valid_enum()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'invalid',
             'message' => 'Test message',
@@ -63,7 +119,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_message_is_required()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'recipients' => ['1'],
@@ -78,7 +134,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_message_max_length()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => str_repeat('a', 1001),
@@ -94,7 +150,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_recipients_is_required()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -109,7 +165,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_recipients_must_be_array()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -125,7 +181,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_recipients_must_have_at_least_one_item()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -141,7 +197,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_each_recipient_is_string()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -157,7 +213,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_priority_is_required()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -172,7 +228,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_priority_must_be_integer()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -188,7 +244,7 @@ class NotificationControllerTest extends TestCase
     public function test_validates_priority_range()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
@@ -204,7 +260,7 @@ class NotificationControllerTest extends TestCase
     public function test_creates_notification_task_on_valid_request()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-123',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Ваш код подтверждения: 123456',
@@ -216,7 +272,7 @@ class NotificationControllerTest extends TestCase
         $response->assertJson([
             'success' => true,
             'message' => 'Notification task created successfully',
-            'request_id' => 'test-request-123',
+            'request_id' => self::VALID_UUID,
         ]);
 
         $this->assertDatabaseHas('notification_tasks', [
@@ -237,7 +293,7 @@ class NotificationControllerTest extends TestCase
     public function test_creates_notification_task_for_email_channel()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-456',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'email',
             'message' => 'Test email message',
@@ -259,7 +315,7 @@ class NotificationControllerTest extends TestCase
     public function test_returns_task_id_in_response()
     {
         $response = $this->withHeaders([
-            'X-Request-ID' => 'test-request-789',
+            'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test',

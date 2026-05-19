@@ -115,13 +115,6 @@ class NotificationController extends Controller
      */
     public function sendBulk(Request $request): JsonResponse
     {
-        // Validate X-Request-ID header
-        if (!$request->hasHeader('X-Request-ID')) {
-            return response()->json([
-                'error' => 'Missing required header: X-Request-ID'
-            ], 400);
-        }
-
         $requestId = $request->header('X-Request-ID');
 
         // Validate request payload
