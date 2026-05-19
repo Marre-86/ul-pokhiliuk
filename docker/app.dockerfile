@@ -10,7 +10,9 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Установка расширений
-RUN docker-php-ext-install pdo_pgsql
+RUN docker-php-ext-install \
+    pdo_pgsql \
+    sockets
 
 RUN pecl install redis \
     && docker-php-ext-enable redis

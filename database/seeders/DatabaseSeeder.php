@@ -29,5 +29,31 @@ class DatabaseSeeder extends Seeder
             
             $this->command->info("Test user created with email: {$testUserEmail}");
         }
+
+        User::factory()->create([
+            'name' => 'Андрей Яхонтов',
+            'email' => 'andrey@mail.ru',
+            'phone' => '+7924555666',
+            'password' => Hash::make($testUserPassword),
+        ]);
+
+        User::factory()->create([
+            'name' => 'Амир Баргыбаев',
+            'email' => 'amir@mail.ru',
+            'password' => Hash::make($testUserPassword),
+        ]);
+
+        User::factory()->create([
+            'name' => 'Гузель Зайнуллина',
+            'email' => 'guzel@mail.ru',
+            'password' => Hash::make($testUserPassword),
+        ]);
+
+        User::factory()->create([
+            'name' => 'Владимир Пучков',
+            'email' => 'vladimir@mail.ru',
+            'phone' => '+79137177145',
+            'password' => Hash::make($testUserPassword),
+        ]);
     }
 }
