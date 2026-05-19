@@ -31,7 +31,7 @@ update-swagger:
 	php artisan app:generate-open-api
 
 lint:
-	composer exec --verbose phpcs -- --standard=PSR12 app routes
+	composer exec --verbose phpcs -- app routes
 
 phpstan:
 	vendor/bin/phpstan analyse --memory-limit=2G

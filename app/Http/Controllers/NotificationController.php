@@ -27,8 +27,13 @@ class NotificationController extends Controller
      *         name="X-Request-ID",
      *         in="header",
      *         required=true,
-     *         description="Unique request identifier for tracing",
-     *         @OA\Schema(type="string", example="req-123e4567-e89b-12d3-a456-426614174000")
+     *         description="Unique request identifier for idempotency and tracing. Must be a valid UUID v4 (36 characters, lowercase).",
+     *         @OA\Schema(
+     *             type="string",
+     *             format="uuid",
+     *             pattern="^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+     *             example="f47ac10b-58cc-4372-a567-0e02b2c3d479"
+     *         )
      *     ),
      *     @OA\RequestBody(
      *         required=true,
