@@ -19,17 +19,18 @@
 запуска массовой отправки SMS или email-сообщений (без реальной отправки - использовать заглушки). Полный текст ТЗ [здесь](task_description.pdf)
 .
 
-<!-- ## Решение
+## Решение
 
-При проектировании сервиса уведомлений в качестве базового был выбран стандартный паттерн <a href="https://refactoring.guru/ru/design-patterns/strategy" target="_blank">"Стратегия"</a>, позволяющий легко расширять сервис уведомлений новыми каналами без изменений существующего кода. Необходимо лишь добавить новый канал (или "стратегию" ) в качестве нового класса в [App\Notifications\Strategies](app/Notifications/Strategies/) и добавить строчку с этим новым классом в мэппинг в [config/notifications.php](config/notifications.php), а новый канал - в Enum [App\Enums\NotificationChannel](app/Enums/NotificationChannel.php).
+**POST /api/notifications/send-bulk** - базовый API-route сервиса, принимающий извне массив данных содержащий канал связи, текст сообщения и массив идентификаторов
+получателей. Также в принимаемом запросе должен быть указан заголовок *X-Request-ID* (в формате UUID v4) - сервис на его основании осуществит дедубликацию (используется Redis).
+
+<!-- При проектировании сервиса уведомлений в качестве базового был выбран стандартный паттерн <a href="https://refactoring.guru/ru/design-patterns/strategy" target="_blank">"Стратегия"</a>, позволяющий легко расширять сервис уведомлений новыми каналами без изменений существующего кода. Необходимо лишь добавить новый канал (или "стратегию" ) в качестве нового класса в [App\Notifications\Strategies](app/Notifications/Strategies/) и добавить строчку с этим новым классом в мэппинг в [config/notifications.php](config/notifications.php), а новый канал - в Enum [App\Enums\NotificationChannel](app/Enums/NotificationChannel.php).
 
 Каждая стратегия имплементирует интерфейс [App\Contracts\NotificationStrategy](app/Contracts/NotificationStrategy.php) и реализует обязательный метод send() - реальной реализации нет, согласно ТЗ, поставлена заглушка. Заглушка представляет из себя симуляцию обращения во внешний сервис (отправки уведомления) и рандомно возвращающую "успех" или "неудачу" (вероятности этого, а также другие настройки данной заглушки можно подкрутить в config/notifications.php).
 
-[App\Notifications\NotificationService](app/Notifications/NotificationService.php) - сервис уведомлений, в котором можно установить выбранную стратегию и осуществить отправку.
+[App\Notifications\NotificationService](app/Notifications/NotificationService.php) - сервис уведомлений, в котором можно установить выбранную стратегию и осуществить отправку. -->
 
-Написана тестовая консольная команда [App\Console\Commands\TestNotificationCommand](app/Console/Commands/TestNotificationCommand.php), демонстрирующая практическое использование сервиса уведомлений. Команда выполняет создание и отправку уведомления. Создание уведомления (но не отправку) также можно сделать путем обращения извне на API-route **POST /api/store-notification**. Чтобы избежать дублирования, переиспользуемый код вынесен в отдельный сервис [App\Services\NotificationCreator](app/Services/NotificationCreator.php).
-
-Реализовано также ещё два эндпойнта API:
+<!-- Реализовано также ещё два эндпойнта API:
 - **GET /notification-status/:id** - проверка статуса оповещения по id
 - **GET /user/:id/notifications** - возвращает список всех оповещений указанного пользователя. Есть фильтрация по статусу и каналу. -->
 

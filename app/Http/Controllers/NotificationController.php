@@ -7,6 +7,7 @@ use App\Enums\NotificationTaskStatus;
 use App\Models\NotificationTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -111,6 +112,15 @@ class NotificationController extends Controller
      *                 }
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Duplicate request detected",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Duplicate request detected"),
+     *             @OA\Property(property="message", type="string", example="A request with the same X-Request-ID is already being processed or was recently processed."),
+     *             @OA\Property(property="request_id", type="string", example="f47ac10b-58cc-4372-a567-0e02b2c3d479")
+     *         )
      *     )
      * )
      *
@@ -121,6 +131,17 @@ class NotificationController extends Controller
     public function sendBulk(Request $request): JsonResponse
     {
         $requestId = $request->header('X-Request-ID');
+
+        // Duplication check using Redis
+        $cacheKey = 'request_id:' . $requestId;
+        $ttl = config('notifications.request_id_ttl', 3600); // 1 hour by default
+        if (!Cache::add($cacheKey, true, $ttl)) {
+            return response()->json([
+                'error' => 'Duplicate request detected',
+                'message' => 'A request with the same X-Request-ID is already being processed or was recently processed.',
+                'request_id' => $requestId,
+            ], 409);
+        }
 
         // Validate request payload
         $validator = Validator::make($request->all(), [

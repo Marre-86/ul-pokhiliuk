@@ -25,4 +25,6 @@ return [
         'base_delay_seconds' => env('NOTIFICATIONS_RETRY_DELAY', 60),
         'max_delay_seconds' => env('NOTIFICATIONS_MAX_RETRY_DELAY', 300),
     ],
+
+    'request_id_ttl' => env('NOTIFICATIONS_REQUEST_ID_TTL', 3600),
 ];

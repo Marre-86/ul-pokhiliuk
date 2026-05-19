@@ -330,4 +330,29 @@ class NotificationControllerTest extends TestCase
         $task = NotificationTask::find($data['task_id']);
         $this->assertNotNull($task);
     }
+
+    /** @test */
+    public function test_duplicate_request_detection()
+    {
+        $headers = ['X-Request-ID' => self::VALID_UUID];
+        $payload = [
+            'channel' => 'sms',
+            'message' => 'Test duplicate',
+            'recipients' => ['1'],
+            'priority' => 1,
+        ];
+
+        // First request should succeed
+        $firstResponse = $this->withHeaders($headers)->postJson('/api/notifications/send-bulk', $payload);
+        $firstResponse->assertStatus(201);
+
+        // Second request with same X-Request-ID should be rejected with 409
+        $secondResponse = $this->withHeaders($headers)->postJson('/api/notifications/send-bulk', $payload);
+        $secondResponse->assertStatus(409);
+        $secondResponse->assertJson([
+            'error' => 'Duplicate request detected',
+            'message' => 'A request with the same X-Request-ID is already being processed or was recently processed.',
+            'request_id' => self::VALID_UUID,
+        ]);
+    }
 }
