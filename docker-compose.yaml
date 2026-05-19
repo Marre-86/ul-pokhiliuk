@@ -10,6 +10,8 @@ services:
             - ./:/var/www
         depends_on:
             - "database"
+            - "rabbitmq"
+            - "redis"
     web:
         build:
             context: ./
