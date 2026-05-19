@@ -8,7 +8,8 @@
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.8",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "dev-master"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -33,6 +34,12 @@
             "Tests\\": "tests/"
         }
     },
+    "repositories": [
+        {
+        "type": "vcs",
+        "url": "https://github.com/Marre-86/laravel-queue-rabbitmq"
+        }
+    ],
     "scripts": {
         "setup": [
             "composer install",

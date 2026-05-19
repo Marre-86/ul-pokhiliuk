@@ -1,4 +1,4 @@
-<h1 align="center">Тестовое задание для ООО «Умная Логистика» <a href="https://jilfond.ru/" target="_blank"><img src="./public/images/ul-logo.png" alt="AmoPoint Logo" width="100"></a></h1>
+<h1 align="center">Тестовое задание для ООО «Умная Логистика» <a href="https://ul.su/" target="_blank"><img src="./public/images/ul-logo.png" alt="Ul Logo" width="100"></a></h1>
 <h3 align="center">Кандидат: Похилюк Артем</h3>
 <h4 align="center">Вакансия: Backend-разработчик (middle)</h4>
 
@@ -74,7 +74,9 @@ Docker Compose включает следующие сервисы:
 
 - **app**: PHP-FPM 8.3 с Xdebug для покрытия кода
 - **web**: Nginx веб-сервер
-- **database**: MySQL 8.4.9
+- **database**: PostgreSQL 16
+- **rabbitmq**: RabbitMQ 4.3
+- **redis**: Redis 8.6
 
 ### Полезные команды
 
@@ -87,6 +89,8 @@ Docker Compose включает следующие сервисы:
    docker compose exec database bash
    psql -U laravel -W -d ul_pokhiliuk
    ```
+- **Веб-панель RabbitMQ**: http://localhost:15672 (логин/пароль: guest/guest)
+- **Подключение к консоли Redis**: `docker exec -it redis redis-cli`
 - **Подключение к консоли приложения**: `docker compose exec app bash`
 
 изнутри консоли приложения:
@@ -94,5 +98,3 @@ Docker Compose включает следующие сервисы:
 - **Проверка PHPStan**: `make phpstan`
 - **Проверка code style**: `make lint`
 - **Линтер, PHPStan, тесты одной командой**: `make check`
-- **Запуск тестовой команды уведомлений**: `php artisan notify:test email "Тестовое сообщение" '{"email":"test@example.com"}'`
-
