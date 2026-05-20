@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('notification_tasks', function (Blueprint $table) {
             $table->id('id');
-            $table->string('channel', 10); // 'sms' или 'email'
+            $table->string('channel', 20);
             $table->text('message');
-            $table->integer('priority')->default(5); // 1-высший, 10-низший
+            $table->integer('priority')->default(5);
             $table->timestamps();
         });
     }

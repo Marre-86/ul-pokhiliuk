@@ -3,8 +3,14 @@
 namespace Tests\Feature;
 
 use App\Enums\NotificationChannel;
+use App\Enums\NotificationStatus;
+use App\Models\Notification;
 use App\Models\NotificationTask;
+use App\Models\User;
+use App\Jobs\SendNotificationJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class NotificationControllerTest extends TestCase
@@ -12,6 +18,12 @@ class NotificationControllerTest extends TestCase
     use RefreshDatabase;
 
     private const VALID_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Cache::flush();
+    }
 
     /** @test */
     public function test_requires_x_request_id_header()
@@ -351,4 +363,291 @@ class NotificationControllerTest extends TestCase
             'request_id' => self::VALID_UUID,
         ]);
     }
+
+    /** @test */
+    public function test_creates_notifications_for_existing_users()
+    {
+        // Create users in database
+        $user1 = User::factory()->create(['id' => 1]);
+        $user2 = User::factory()->create(['id' => 2]);
+
+        Queue::fake();
+
+        $response = $this->withHeaders([
+            'X-Request-ID' => self::VALID_UUID,
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test message',
+            'recipients' => [1, 2],
+            'priority' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'success' => true,
+            'notifications_created' => 2,
+        ]);
+
+        // Assert task created
+        $task = NotificationTask::first();
+        $this->assertNotNull($task);
+
+        // Assert notifications created
+        $this->assertDatabaseCount('notifications', 2);
+        $this->assertDatabaseHas('notifications', [
+            'task_id' => $task->id,
+            'recipient_id' => 1,
+            'status' => NotificationStatus::PENDING->value,
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'task_id' => $task->id,
+            'recipient_id' => 2,
+            'status' => NotificationStatus::PENDING->value,
+        ]);
+
+        // Assert jobs dispatched
+        Queue::assertPushed(SendNotificationJob::class, 2);
+        Queue::assertPushedOn('high-priority', SendNotificationJob::class);
+    }
+
+    /** @test */
+    public function test_skips_non_existent_users()
+    {
+        // Create only user with ID 1
+        $user = User::factory()->create(['id' => 1]);
+
+        Queue::fake();
+
+        $response = $this->withHeaders([
+            'X-Request-ID' => self::VALID_UUID,
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test message',
+            'recipients' => [1, 999], // 999 does not exist
+            'priority' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'success' => true,
+            'notifications_created' => 1, // only one notification created
+        ]);
+
+        $this->assertDatabaseCount('notifications', 1);
+        $this->assertDatabaseHas('notifications', [
+            'recipient_id' => 1,
+        ]);
+        $this->assertDatabaseMissing('notifications', [
+            'recipient_id' => 999,
+        ]);
+
+        Queue::assertPushed(SendNotificationJob::class, 1);
+    }
+
+    /** @test */
+    public function test_dispatches_jobs_with_correct_queue_based_on_priority()
+    {
+        User::factory()->create(['id' => 1]);
+
+        Queue::fake();
+
+        // Priority 5 (less than 6) -> high-priority
+        $response = $this->withHeaders([
+            'X-Request-ID' => self::VALID_UUID,
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test',
+            'recipients' => [1],
+            'priority' => 5,
+        ]);
+
+        $response->assertStatus(201);
+        Queue::assertPushedOn('high-priority', SendNotificationJob::class);
+
+        // Clear queue fake for second test
+        Queue::fake();
+        // Clear cache to avoid duplicate request detection
+        Cache::flush();
+
+        // Priority 6 (>=6) -> low-priority
+        $response = $this->withHeaders([
+            'X-Request-ID' => self::VALID_UUID,
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test',
+            'recipients' => [1],
+            'priority' => 6,
+        ]);
+
+        $response->assertStatus(201);
+        Queue::assertPushedOn('low-priority', SendNotificationJob::class);
+    }
+
+    /** @test */
+    public function test_returns_notifications_created_count()
+    {
+        User::factory()->create(['id' => 1]);
+        User::factory()->create(['id' => 2]);
+
+        Queue::fake();
+
+        $response = $this->withHeaders([
+            'X-Request-ID' => self::VALID_UUID,
+        ])->postJson('/api/notifications/send-bulk', [
+            'channel' => 'sms',
+            'message' => 'Test',
+            'recipients' => [1, 2],
+            'priority' => 1,
+        ]);
+
+        $response->assertStatus(201);
+        $data = $response->json();
+        $this->assertArrayHasKey('notifications_created', $data);
+        $this->assertEquals(2, $data['notifications_created']);
+    }
+
+    /** @test */
+    public function test_update_delivery_status_requires_authentication()
+    {
+        $response = $this->postJson('/api/notifications/webhook/delivery', [
+            'notification_id' => 1,
+            'status' => 'delivered',
+            'timestamp' => '2026-05-20T12:30:00Z',
+        ]);
+
+        $response->assertStatus(401);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Authorization header required',
+        ]);
+    }
+
+    /** @test */
+    public function test_update_delivery_status_validates_request()
+    {
+        // Set a valid token for authentication
+        config(['services.webhooks.notification_delivery.tokens' => ['test-token']]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer test-token',
+        ])->postJson('/api/notifications/webhook/delivery', [
+            'status' => 'invalid_status',
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Invalid request data',
+        ]);
+        $response->assertJsonValidationErrors(['notification_id', 'status', 'timestamp']);
+    }
+
+    /** @test */
+    public function test_update_delivery_status_notification_not_found()
+    {
+        config(['services.webhooks.notification_delivery.tokens' => ['test-token']]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer test-token',
+        ])->postJson('/api/notifications/webhook/delivery', [
+            'notification_id' => 999,
+            'status' => 'delivered',
+            'timestamp' => '2026-05-20T12:30:00Z',
+        ]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Invalid request data',
+        ]);
+        $response->assertJsonValidationErrors(['notification_id']);
+    }
+
+    /** @test */
+    public function test_update_delivery_status_success_delivered()
+    {
+        config(['services.webhooks.notification_delivery.tokens' => ['test-token']]);
+
+        // Create a user, task, and notification
+        $user = User::factory()->create();
+        $task = NotificationTask::create([
+            'channel' => NotificationChannel::SMS,
+            'message' => 'Test',
+            'priority' => 1,
+        ]);
+        $notification = Notification::create([
+            'task_id' => $task->id,
+            'recipient_id' => $user->id,
+            'status' => NotificationStatus::PENDING,
+            'attempts' => 0,
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer test-token',
+        ])->postJson('/api/notifications/webhook/delivery', [
+            'notification_id' => $notification->id,
+            'status' => 'delivered',
+            'timestamp' => '2026-05-20T12:30:00Z',
+            'provider_reference' => 'msg-123',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Delivery status updated',
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'id' => $notification->id,
+            'status' => NotificationStatus::DELIVERED->value,
+            'delivered_at' => '2026-05-20 12:30:00',
+            'delivery_failed_at' => null,
+        ]);
+    }
+
+    /** @test */
+    public function test_update_delivery_status_success_delivery_failed()
+    {
+        config(['services.webhooks.notification_delivery.tokens' => ['test-token']]);
+
+        // Create a user, task, and notification
+        $user = User::factory()->create();
+        $task = NotificationTask::create([
+            'channel' => NotificationChannel::SMS,
+            'message' => 'Test',
+            'priority' => 1,
+        ]);
+        $notification = Notification::create([
+            'task_id' => $task->id,
+            'recipient_id' => $user->id,
+            'status' => NotificationStatus::PENDING,
+            'attempts' => 0,
+        ]);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer test-token',
+        ])->postJson('/api/notifications/webhook/delivery', [
+            'notification_id' => $notification->id,
+            'status' => 'delivery_failed',
+            'timestamp' => '2026-05-20T12:35:00Z',
+            'error_message' => 'Recipient unavailable',
+            'error_code' => 'RECIPIENT_UNAVAILABLE',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Delivery status updated',
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'id' => $notification->id,
+            'status' => NotificationStatus::DELIVERY_FAILED->value,
+            'delivered_at' => null,
+            'delivery_failed_at' => '2026-05-20 12:35:00',
+            'error_message' => 'Recipient unavailable',
+            'error_code' => 'RECIPIENT_UNAVAILABLE',
+        ]);
+    }
+
 }

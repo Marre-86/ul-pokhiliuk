@@ -175,12 +175,9 @@ class NotificationController extends Controller
         // Create individual notifications for each recipient
         $recipientIds = [];
 
-        // Convert recipient strings to user IDs
-        foreach ($validated['recipients'] as $recipient) {
-            // Try to find user by ID or email
-            $user = User::where('id', $recipient)
-                ->orWhere('email', $recipient)
-                ->first();
+        // Find users by ID (validation ensures recipients are integers)
+        foreach ($validated['recipients'] as $recipientId) {
+            $user = User::find($recipientId);
 
             if ($user) {
                 $recipientIds[] = $user->id;
