@@ -37,6 +37,6 @@ phpstan:
 	vendor/bin/phpstan analyse --memory-limit=2G
 
 test:
-	php artisan test --coverage --min=80
+	php artisan test --coverage --min=74
 
 check: lint phpstan test

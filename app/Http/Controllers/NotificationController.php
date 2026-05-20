@@ -138,7 +138,7 @@ class NotificationController extends Controller
 
         // Duplication check using Redis
         $cacheKey = 'request_id:' . $requestId;
-        $ttl = config('notifications.request_id_ttl', 3600); // 1 hour by default
+        $ttl = config('notifications.request_id_ttl', 3600);
         if (!Cache::add($cacheKey, true, $ttl)) {
             return response()->json([
                 'error' => 'Duplicate request detected',
@@ -395,6 +395,121 @@ class NotificationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Delivery status updated'
+        ]);
+    }
+
+    /**
+     * List notifications by recipient ID
+     *
+     * @OA\Get(
+     *     path="/api/notifications",
+     *     summary="Get notifications for a specific recipient",
+     *     description="Returns a list of notifications sent to the specified user ID",
+     *     operationId="listNotificationsByRecipient",
+     *     tags={"Notifications"},
+     *     @OA\Parameter(
+     *         name="recipient_id",
+     *         in="query",
+     *         required=true,
+     *         description="ID of the recipient user",
+     *         @OA\Schema(
+     *             type="integer",
+     *             example=1
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of notifications",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="success",
+     *                 type="boolean",
+     *                 example=true
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="task_id", type="integer", example=1),
+     *                     @OA\Property(property="recipient_id", type="integer", example=1),
+     *                     @OA\Property(property="status", type="string", example="sent"),
+     *                     @OA\Property(property="attempts", type="integer", example=1),
+     *                     @OA\Property(property="last_attempt", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="error_message", type="string", nullable=true),
+     *                     @OA\Property(property="error_code", type="string", nullable=true),
+     *                     @OA\Property(property="sent_at", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="failed_at", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="delivered_at", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="delivery_failed_at", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(
+     *                         property="task",
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="channel", type="string", example="sms"),
+     *                         @OA\Property(property="message", type="string", example="Test message"),
+     *                         @OA\Property(property="priority", type="integer", example=1),
+     *                         @OA\Property(property="created_at", type="string", format="date-time")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Missing or invalid recipient_id parameter",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Invalid request data"),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="recipient_id",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="The recipient id field is required.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Recipient not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Recipient not found")
+     *         )
+     *     )
+     * )
+     */
+    public function listByRecipient(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'recipient_id' => 'required|integer|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid request data',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $recipientId = $request->input('recipient_id');
+
+        $notifications = Notification::with('task')
+            ->where('recipient_id', $recipientId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications
         ]);
     }
 }

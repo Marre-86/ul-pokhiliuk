@@ -650,4 +650,93 @@ class NotificationControllerTest extends TestCase
         ]);
     }
 
+    /** @test */
+    public function test_list_notifications_by_recipient_success()
+    {
+        $user = User::factory()->create();
+        $task = NotificationTask::create([
+            'channel' => NotificationChannel::SMS,
+            'message' => 'Test message',
+            'priority' => 1,
+        ]);
+        $notification1 = Notification::create([
+            'task_id' => $task->id,
+            'recipient_id' => $user->id,
+            'status' => NotificationStatus::SENT,
+            'attempts' => 1,
+            'sent_at' => now(),
+        ]);
+        $notification2 = Notification::create([
+            'task_id' => $task->id,
+            'recipient_id' => $user->id,
+            'status' => NotificationStatus::PENDING,
+            'attempts' => 0,
+        ]);
+
+        $response = $this->getJson('/api/notifications?recipient_id=' . $user->id);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+        ]);
+        $response->assertJsonStructure([
+            'success',
+            'data' => [
+                '*' => [
+                    'id',
+                    'task_id',
+                    'recipient_id',
+                    'status',
+                    'attempts',
+                    'last_attempt',
+                    'error_message',
+                    'error_code',
+                    'sent_at',
+                    'failed_at',
+                    'delivered_at',
+                    'delivery_failed_at',
+                    'created_at',
+                    'updated_at',
+                    'task' => [
+                        'id',
+                        'channel',
+                        'message',
+                        'priority',
+                        'created_at',
+                    ],
+                ],
+            ],
+        ]);
+
+        $data = $response->json('data');
+        $this->assertCount(2, $data);
+        $this->assertEquals($notification1->id, $data[0]['id']);
+        $this->assertEquals($notification2->id, $data[1]['id']);
+    }
+
+    /** @test */
+    public function test_list_notifications_by_recipient_missing_parameter()
+    {
+        $response = $this->getJson('/api/notifications');
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Invalid request data',
+        ]);
+        $response->assertJsonValidationErrors(['recipient_id']);
+    }
+
+    /** @test */
+    public function test_list_notifications_by_recipient_invalid_recipient()
+    {
+        $response = $this->getJson('/api/notifications?recipient_id=999');
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Invalid request data',
+        ]);
+        $response->assertJsonValidationErrors(['recipient_id']);
+    }
 }

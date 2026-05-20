@@ -26,7 +26,5 @@ return [
         'max_delay_seconds' => env('NOTIFICATIONS_MAX_RETRY_DELAY', 300),
     ],
 
-    //  для тестирования
-    // 'request_id_ttl' => env('NOTIFICATIONS_REQUEST_ID_TTL', 1),
     'request_id_ttl' => env('NOTIFICATIONS_REQUEST_ID_TTL', 3600),
 ];

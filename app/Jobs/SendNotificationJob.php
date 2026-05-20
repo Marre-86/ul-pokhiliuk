@@ -13,10 +13,10 @@ use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Queue\Attributes\Backoff;
 use Illuminate\Support\Facades\Log;
 
-// #[Tries(5)]
-#[Tries(15)]
-// #[Backoff([3, 6, 9, 12, 15, 18, 21, 24, 27, 30])]
-#[Backoff([60, 300, 900, 3600, 7200, 14400, 28800, 43200, 86400, 172800])]
+#[Tries(5)]
+// #[Tries(15)]
+#[Backoff([3, 6, 9, 12, 15, 18, 21, 24, 27, 30])]
+// #[Backoff([60, 300, 900, 3600, 7200, 14400, 28800, 43200, 86400, 172800])]
 class SendNotificationJob implements ShouldQueue
 {
     use Dispatchable;

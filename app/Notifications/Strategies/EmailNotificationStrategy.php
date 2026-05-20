@@ -14,7 +14,7 @@ class EmailNotificationStrategy implements NotificationStrategy
         Log::info('EMAIL STUB: Sending to ' . $recipient['email'] . ': ' . $message);
 
         // Simulate random success/failure for study project
-        $successRate = config('notifications.mock.success_rate.email', 0.9); // 90% success rate
+        $successRate = config('notifications.mock.success_rate.email', 0.5);
         $shouldSucceed = mt_rand(1, 100) <= ($successRate * 100);
 
         if ($shouldSucceed) {

@@ -14,7 +14,7 @@ class SmsNotificationStrategy implements NotificationStrategy
         Log::info('SMS STUB: Sending to ' . $recipient['phone'] . ': ' . $message);
 
         // Simulate random success/failure for study project
-        $successRate = config('notifications.mock.success_rate.sms', 0.9); // 90% success rate
+        $successRate = config('notifications.mock.success_rate.sms', 0.5);
         $shouldSucceed = mt_rand(1, 100) <= ($successRate * 100);
 
         if ($shouldSucceed) {

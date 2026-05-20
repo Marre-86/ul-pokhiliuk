@@ -9,3 +9,5 @@ Route::post('/notifications/send-bulk', [NotificationController::class, 'sendBul
 
 Route::post('/notifications/webhook/delivery', [NotificationController::class, 'updateDeliveryStatus'])
     ->middleware(\App\Http\Middleware\AuthenticateWebhook::class);
+
+Route::get('/notifications', [NotificationController::class, 'listByRecipient']);
