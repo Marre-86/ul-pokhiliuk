@@ -67,9 +67,8 @@
                                         "description": "List of user IDs to receive the notification",
                                         "type": "array",
                                         "items": {
-                                            "type": "string",
-                                            "example": "1",
-                                            "maxLength": 255
+                                            "type": "integer",
+                                            "example": 1
                                         },
                                         "example": [
                                             "1",
@@ -188,6 +187,176 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/notifications/webhook/delivery": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Update notification delivery status via webhook",
+                "description": "External providers call this endpoint to report delivery status (delivered, delivery_failed). Requires Bearer token authentication.",
+                "operationId": "updateDeliveryStatus",
+                "requestBody": {
+                    "description": "Delivery status update",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "notification_id",
+                                    "status",
+                                    "timestamp"
+                                ],
+                                "properties": {
+                                    "notification_id": {
+                                        "description": "ID of the notification to update",
+                                        "type": "integer",
+                                        "example": 123
+                                    },
+                                    "status": {
+                                        "description": "Delivery status",
+                                        "type": "string",
+                                        "example": "delivery_failed",
+                                        "enum": [
+                                            "delivered",
+                                            "delivery_failed"
+                                        ]
+                                    },
+                                    "timestamp": {
+                                        "description": "When the delivery event occurred (ISO 8601)",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-05-20T12:30:00Z"
+                                    },
+                                    "error_message": {
+                                        "description": "Error message for delivery failures (optional)",
+                                        "type": "string",
+                                        "example": "Recipient unavailable"
+                                    },
+                                    "error_code": {
+                                        "description": "Error code for delivery failures (optional)",
+                                        "type": "string",
+                                        "example": "RECIPIENT_UNAVAILABLE"
+                                    },
+                                    "provider_reference": {
+                                        "description": "Provider's reference ID for this notification (optional)",
+                                        "type": "string",
+                                        "example": "msg-abc123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Delivery status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Delivery status updated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication required",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authorization header required"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Invalid authentication token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid authentication token"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Notification not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid status or missing required fields"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         }
     },

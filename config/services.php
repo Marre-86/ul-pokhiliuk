@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'webhooks' => [
+        'notification_delivery' => [
+            'tokens' => explode(',', env('WEBHOOK_DELIVERY_TOKENS', '')),
+            'auth_type' => env('WEBHOOK_AUTH_TYPE', 'bearer'), // bearer, basic, signature
+        ],
+    ],
+
 ];

@@ -23,6 +23,7 @@ services:
             - 80:80
         depends_on:
             - "app"
+
     database:
         image: postgres:16
         command:
@@ -41,6 +42,11 @@ services:
         ports:
             - 54321:5432
         restart: unless-stopped
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+            interval: 6s
+            timeout: 3s
+            retries: 10
 
     rabbitmq:
         image: rabbitmq:4.3-management
@@ -52,6 +58,44 @@ services:
             - RABBITMQ_DEFAULT_PASS=guest
         volumes:
             - rabbitmq_data:/var/lib/rabbitmq
+
+    queue-worker-high:
+        image: ul-pokhiliuk-app
+        container_name: app-queue-worker-high
+        working_dir: /var/www
+        volumes:
+            - .:/var/www
+        depends_on:
+            database:
+                condition: service_healthy
+            app:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
+        command: >
+            sh -c "
+                php artisan queue:work rabbitmq --queue=high-priority --timeout=0 --sleep=3 --tries=3
+            "
+        restart: unless-stopped
+
+    queue-worker-low:
+        image: ul-pokhiliuk-app
+        container_name: app-queue-worker-low
+        working_dir: /var/www
+        volumes:
+            - .:/var/www
+        depends_on:
+            database:
+                condition: service_healthy
+            app:
+                condition: service_started
+            rabbitmq:
+                condition: service_started
+        command: >
+            sh -c "
+                php artisan queue:work rabbitmq --queue=low-priority --timeout=0 --sleep=3 --tries=3
+            "
+        restart: unless-stopped
 
     redis:
         image: redis:alpine

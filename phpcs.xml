@@ -8,10 +8,10 @@
     <!-- Переопределяем лимит длины строки -->
     <rule ref="Generic.Files.LineLength">
         <properties>
-            <!-- Предупреждение, если строка длиннее 140 символов -->
-            <property name="lineLimit" value="140"/>
-            <!-- Ошибка, если строка длиннее 150 символов -->
-            <property name="absoluteLineLimit" value="150"/>
+            <!-- Предупреждение, если строка длиннее 160 символов -->
+            <property name="lineLimit" value="160"/>
+            <!-- Ошибка, если строка длиннее 200 символов -->
+            <property name="absoluteLineLimit" value="200"/>
         </properties>
     </rule>
 

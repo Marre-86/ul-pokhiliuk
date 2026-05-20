@@ -194,14 +194,14 @@ class NotificationControllerTest extends TestCase
     }
 
     /** @test */
-    public function test_validates_each_recipient_is_string()
+    public function test_validates_each_recipient_is_integer()
     {
         $response = $this->withHeaders([
             'X-Request-ID' => self::VALID_UUID,
         ])->postJson('/api/notifications/send-bulk', [
             'channel' => 'sms',
             'message' => 'Test message',
-            'recipients' => [1, 2],
+            'recipients' => ['abc', 'def'],
             'priority' => 1,
         ]);
 

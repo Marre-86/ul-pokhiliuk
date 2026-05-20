@@ -11,12 +11,12 @@ return [
     'mock' => [
         'enabled' => env('NOTIFICATIONS_MOCK_ENABLED', true),
         'success_rate' => [
-            'email' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_EMAIL', 0.9),
-            'telegram' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_TELEGRAM', 0.85),
+            'email' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_EMAIL', 0.1),
+            'sms' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_SMS', 0.1),
         ],
         'average_delay_ms' => [
             'email' => env('NOTIFICATIONS_MOCK_DELAY_EMAIL', 100),
-            'telegram' => env('NOTIFICATIONS_MOCK_DELAY_TELEGRAM', 200),
+            'sms' => env('NOTIFICATIONS_MOCK_DELAY_SMS', 200),
         ],
     ],
     
@@ -26,5 +26,7 @@ return [
         'max_delay_seconds' => env('NOTIFICATIONS_MAX_RETRY_DELAY', 300),
     ],
 
+    //  для тестирования
+    // 'request_id_ttl' => env('NOTIFICATIONS_REQUEST_ID_TTL', 1),
     'request_id_ttl' => env('NOTIFICATIONS_REQUEST_ID_TTL', 3600),
 ];

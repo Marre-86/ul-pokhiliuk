@@ -17,12 +17,30 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $attempts
  * @property Carbon|null $last_attempt
  * @property string|null $error_message
+ * @property string|null $error_code
+ * @property Carbon|null $sent_at
+ * @property Carbon|null $failed_at
+ * @property Carbon|null $delivered_at
+ * @property Carbon|null $delivery_failed_at
  * @property Carbon $created_at
+ * @property Carbon $updated_at
  *
  * @property-read NotificationTask $task
  * @property-read User $recipient
  */
-#[Fillable(['task_id', 'recipient_id', 'status', 'attempts', 'last_attempt', 'error_message'])]
+#[Fillable([
+    'task_id',
+    'recipient_id',
+    'status',
+    'attempts',
+    'last_attempt',
+    'error_message',
+    'error_code',
+    'sent_at',
+    'failed_at',
+    'delivered_at',
+    'delivery_failed_at'
+])]
 class Notification extends Model
 {
     use HasFactory;
@@ -45,6 +63,10 @@ class Notification extends Model
             'status' => NotificationStatus::class,
             'attempts' => 'integer',
             'last_attempt' => 'datetime',
+            'sent_at' => 'datetime',
+            'failed_at' => 'datetime',
+            'delivered_at' => 'datetime',
+            'delivery_failed_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -117,13 +139,16 @@ class Notification extends Model
     /**
      * Increment the attempt count and update last_attempt timestamp.
      */
-    public function incrementAttempt(string $errorMessage = null): void
+    public function incrementAttempt(?string $errorMessage = null, ?string $errorCode = null): void
     {
         $this->attempts++;
         $this->last_attempt = now();
 
         if ($errorMessage) {
             $this->error_message = $errorMessage;
+        }
+        if ($errorCode) {
+            $this->error_code = $errorCode;
         }
 
         $this->save();
@@ -135,7 +160,10 @@ class Notification extends Model
     public function markAsSent(): void
     {
         $this->status = NotificationStatus::SENT;
+        $this->sent_at = now();
         $this->last_attempt = now();
+        $this->error_message = null;
+        $this->error_code = null;
         $this->save();
     }
 
@@ -145,19 +173,43 @@ class Notification extends Model
     public function markAsDelivered(): void
     {
         $this->status = NotificationStatus::DELIVERED;
+        $this->delivered_at = now();
         $this->save();
     }
 
     /**
-     * Mark notification as error with optional error message.
+     * Mark notification as error with optional error message and code.
      */
-    public function markAsError(string $errorMessage = null): void
+    public function markAsError(?string $errorMessage = null, ?string $errorCode = null): void
     {
         $this->status = NotificationStatus::ERROR;
+        $this->failed_at = now();
         $this->last_attempt = now();
 
         if ($errorMessage) {
             $this->error_message = $errorMessage;
+        }
+        if ($errorCode) {
+            $this->error_code = $errorCode;
+        }
+
+        $this->save();
+    }
+
+    /**
+     * Mark notification as delivery failed with optional error message and code.
+     */
+    public function markAsDeliveryFailed(?string $errorMessage = null, ?string $errorCode = null): void
+    {
+        $this->status = NotificationStatus::DELIVERY_FAILED;
+        $this->delivery_failed_at = now();
+        $this->last_attempt = now();
+
+        if ($errorMessage) {
+            $this->error_message = $errorMessage;
+        }
+        if ($errorCode) {
+            $this->error_code = $errorCode;
         }
 
         $this->save();

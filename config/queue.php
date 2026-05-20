@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'rabbitmq'),
 
     /*
     |--------------------------------------------------------------------------
@@ -41,7 +41,7 @@ return [
             'connection' => PhpAmqpLib\Connection\AMQPLazyConnection::class,
             'hosts' => [
                 [
-                    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+                    'host' => env('RABBITMQ_HOST', 'rabbitmq'),
                     'port' => env('RABBITMQ_PORT', 5672),
                     'user' => env('RABBITMQ_LOGIN', 'guest'),
                     'password' => env('RABBITMQ_PASSWORD', 'guest'),
@@ -57,7 +57,16 @@ return [
                     'passphrase' => env('RABBITMQ_SSL_PASSPHRASE', null),
                 ],
                 'queue' => [
+                    'declare' => true,
+                    'bind' => true,
+                    'durable' => true,
+                    'exclusive' => false,
+                    'auto_delete' => false,
+                    'arguments' => [],
                     'job' => VladimirYuldashev\LaravelQueueRabbitMQ\Queue\Jobs\RabbitMQJob::class,
+                    'exchange' => env('RABBITMQ_EXCHANGE_NAME', ''),
+                    'exchange_type' => env('RABBITMQ_EXCHANGE_TYPE', 'direct'),
+                    'exchange_routing_key' => '%s',
                 ],
             ],
         ],

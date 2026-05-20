@@ -14,12 +14,12 @@ class SmsNotificationStrategy implements NotificationStrategy
         Log::info('SMS STUB: Sending to ' . $recipient['phone'] . ': ' . $message);
 
         // Simulate random success/failure for study project
-        $successRate = config('notifications.mock.success_rate.email', 0.9); // 90% success rate
+        $successRate = config('notifications.mock.success_rate.sms', 0.9); // 90% success rate
         $shouldSucceed = mt_rand(1, 100) <= ($successRate * 100);
 
         if ($shouldSucceed) {
             // Simulate random delay
-            $delayMs = config('notifications.mock.average_delay_ms.email', 100);
+            $delayMs = config('notifications.mock.average_delay_ms.notifications.mock.success_rate.sms', 100);
             $actualDelay = mt_rand((int)($delayMs * 0.5), (int)($delayMs * 1.5));
             usleep($actualDelay * 1000); // Convert to microseconds
 
@@ -27,9 +27,9 @@ class SmsNotificationStrategy implements NotificationStrategy
         } else {
             // Simulate failure
             $errorTypes = [
-                'network_timeout' => 'Network timeout connecting to email service',
+                'network_timeout' => 'Network timeout connecting to sms service',
                 'rate_limit' => 'Rate limit exceeded, try again later',
-                'invalid_recipient' => 'Invalid email address',
+                'invalid_recipient' => 'Invalid phone number',
             ];
 
             $errorKey = array_rand($errorTypes);
