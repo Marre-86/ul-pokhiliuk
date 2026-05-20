@@ -10,10 +10,13 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\Attributes\Tries;
+use Illuminate\Queue\Attributes\Backoff;
 use Illuminate\Support\Facades\Log;
 
 // #[Tries(5)]
 #[Tries(15)]
+// #[Backoff([3, 6, 9, 12, 15, 18, 21, 24, 27, 30])]
+#[Backoff([60, 300, 900, 3600, 7200, 14400, 28800, 43200, 86400, 172800])]
 class SendNotificationJob implements ShouldQueue
 {
     use Dispatchable;
@@ -58,18 +61,6 @@ class SendNotificationJob implements ShouldQueue
     }
 
     /**
-     * Calculate the number of seconds to wait before retrying the job.
-     *
-     * @return array<int, int>
-     */
-    public function backoff(): array
-    {
-        // для тестирования
-        // return [3, 6, 9, 12, 15, 18, 21, 24, 27, 30];
-        return [60, 300, 900, 3600, 7200, 14400, 28800, 43200, 86400, 172800];
-    }
-
-    /**
      * Handle a job failure.
      */
     public function failed(\Throwable $exception): void
@@ -83,7 +74,7 @@ class SendNotificationJob implements ShouldQueue
         if ($exception instanceof \App\Notifications\Exceptions\NotificationFailureException) {
             // Transient failure that exhausted all retries
             $notification->update([
-                'status' => \App\Enums\NotificationStatus::ERROR,
+                'status' => \App\Enums\NotificationStatus::FAILED,
                 'failed_at' => now(),
                 'last_attempt' => now(),
                 'error_message' => $exception->getMessage(),
@@ -94,7 +85,7 @@ class SendNotificationJob implements ShouldQueue
         } else {
             // Unexpected exception
             $notification->update([
-                'status' => \App\Enums\NotificationStatus::ERROR,
+                'status' => \App\Enums\NotificationStatus::FAILED,
                 'failed_at' => now(),
                 'last_attempt' => now(),
                 'error_message' => 'Job failed: ' . $exception->getMessage(),

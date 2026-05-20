@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationChannel;
-use App\Enums\NotificationTaskStatus;
 use App\Enums\NotificationStatus;
 use App\Models\NotificationTask;
 use App\Models\Notification;
@@ -170,7 +169,6 @@ class NotificationController extends Controller
         $task = NotificationTask::create([
             'channel' => NotificationChannel::from($validated['channel']),
             'message' => $validated['message'],
-            'status' => NotificationTaskStatus::PENDING,
             'priority' => $validated['priority'],
         ]);
 

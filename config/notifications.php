@@ -11,8 +11,8 @@ return [
     'mock' => [
         'enabled' => env('NOTIFICATIONS_MOCK_ENABLED', true),
         'success_rate' => [
-            'email' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_EMAIL', 0.1),
-            'sms' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_SMS', 0.1),
+            'email' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_EMAIL', 0.5),
+            'sms' => env('NOTIFICATIONS_MOCK_SUCCESS_RATE_SMS', 0.5),
         ],
         'average_delay_ms' => [
             'email' => env('NOTIFICATIONS_MOCK_DELAY_EMAIL', 100),

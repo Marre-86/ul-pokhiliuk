@@ -68,9 +68,9 @@ class NotificationService
                     $result->retryDelay
                 );
             } else {
-                // Permanent failure: update to ERROR and don't retry
+                // Permanent failure: update to FAILED and don't retry
                 $notification->update([
-                    'status' => NotificationStatus::ERROR,
+                    'status' => NotificationStatus::FAILED,
                     'failed_at' => now(),
                     'last_attempt' => now(),
                     'error_message' => $result->errorMessage,

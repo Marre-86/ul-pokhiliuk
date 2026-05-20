@@ -7,7 +7,7 @@ enum NotificationStatus: int
     case PENDING = 0;
     case SENT = 1;
     case DELIVERED = 2;
-    case ERROR = 3;
+    case FAILED = 3;
     case DELIVERY_FAILED = 4;
 
     public static function values(): array
@@ -21,7 +21,7 @@ enum NotificationStatus: int
             self::PENDING->value => 'pending',
             self::SENT->value => 'sent',
             self::DELIVERED->value => 'delivered',
-            self::ERROR->value => 'error',
+            self::FAILED->value => 'failed',
             self::DELIVERY_FAILED->value => 'delivery_failed',
         ];
     }
@@ -32,7 +32,7 @@ enum NotificationStatus: int
             self::PENDING => 'pending',
             self::SENT => 'sent',
             self::DELIVERED => 'delivered',
-            self::ERROR => 'error',
+            self::FAILED => 'failed',
             self::DELIVERY_FAILED => 'delivery_failed',
         };
     }

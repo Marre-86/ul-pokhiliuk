@@ -217,7 +217,7 @@
                                     "status": {
                                         "description": "Delivery status",
                                         "type": "string",
-                                        "example": "delivery_failed",
+                                        "example": "delivered",
                                         "enum": [
                                             "delivered",
                                             "delivery_failed"

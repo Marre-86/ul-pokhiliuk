@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\NotificationChannel;
-use App\Enums\NotificationTaskStatus;
 use App\Models\NotificationTask;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -278,14 +277,12 @@ class NotificationControllerTest extends TestCase
         $this->assertDatabaseHas('notification_tasks', [
             'channel' => NotificationChannel::SMS->value,
             'message' => 'Ваш код подтверждения: 123456',
-            'status' => NotificationTaskStatus::PENDING->value,
             'priority' => 1,
         ]);
 
         $task = NotificationTask::first();
         $this->assertNotNull($task);
         $this->assertEquals(NotificationChannel::SMS, $task->channel);
-        $this->assertEquals(NotificationTaskStatus::PENDING, $task->status);
         $this->assertEquals(1, $task->priority);
     }
 
@@ -306,7 +303,6 @@ class NotificationControllerTest extends TestCase
         $this->assertDatabaseHas('notification_tasks', [
             'channel' => NotificationChannel::EMAIL->value,
             'message' => 'Test email message',
-            'status' => NotificationTaskStatus::PENDING->value,
             'priority' => 5,
         ]);
     }
